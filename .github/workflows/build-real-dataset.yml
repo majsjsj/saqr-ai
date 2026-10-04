@@ -1,0 +1,76 @@
+name: Build SAQR real dataset
+
+on:
+  push:
+    paths:
+      - ".github/workflows/build-real-dataset.yml"
+      - "data/sources.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-dataset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download licensed/public-domain source texts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data/raw
+          while IFS='|' read -r name url; do
+            [ -z "${name}" ] && continue
+            case "${name}" in #*) continue;; esac
+            echo "Downloading ${name}"
+            curl -L --fail --retry 3 --retry-delay 2 "${url}" -o "data/raw/${name}.txt"
+          done < data/sources.txt
+
+      - name: Build corpus
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > data/train.txt
+          for f in data/raw/*.txt; do
+            printf '\n\n===== SOURCE: %s =====\n\n' "${f}" >> data/train.txt
+            cat "${f}" >> data/train.txt
+          done
+          wc -c data/train.txt
+          wc -l data/train.txt
+
+      - name: Write dataset manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > data/DATASET.md <<'EOF'
+# SAQR real training corpus
+
+This directory contains real source texts obtained from public-domain or explicitly reusable sources.
+
+The initial corpus is intentionally small enough for repository-based development. It is a real corpus, but it is **not yet large enough to meaningfully pretrain SAQR-100M**.
+
+Before commercial redistribution, verify the applicable copyright status in the countries where the model/data will be distributed.
+
+Sources:
+- Project Gutenberg: https://www.gutenberg.org/
+- Wikimedia licensing information: https://foundation.wikimedia.org/wiki/Legal:Wikimedia_Developer_App_Guidelines/en
+
+The raw Gutenberg files retain their source notices/licenses.
+EOF
+
+      - name: Commit dataset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "SAQR Dataset Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/raw data/train.txt data/DATASET.md
+          if git diff --cached --quiet; then
+            echo "No dataset changes."
+            exit 0
+          fi
+          git commit -m "data: build real public-domain training corpus"
+          git push
