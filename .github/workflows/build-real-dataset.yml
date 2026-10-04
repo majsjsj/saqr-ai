@@ -17,6 +17,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Download open Arabic corpus (CC BY 4.0)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data/hindawi
+          curl -L --fail --retry 3 --retry-delay 2 \\
+            "https://api.researchdata.se/dataset/2024-145/1/file/zip" \\
+            -o /tmp/hindawi.zip
+          unzip -q /tmp/hindawi.zip -d data/hindawi
+          find data/hindawi -type f | head -20
+
       - name: Download licensed/public-domain source texts
         shell: bash
         run: |
@@ -67,7 +78,7 @@ EOF
           set -euo pipefail
           git config user.name "SAQR Dataset Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/raw data/train.txt data/DATASET.md
+          find data/hindawi -type f -name "*.txt" -print0 | xargs -0 cat >> data/train.txt\n          git add data/raw data/hindawi data/train.txt data/DATASET.md
           if git diff --cached --quiet; then
             echo "No dataset changes."
             exit 0
