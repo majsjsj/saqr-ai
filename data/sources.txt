@@ -1,0 +1,5 @@
+# name|download URL
+arabic_michael_hart|https://www.gutenberg.org/cache/epub/43007/pg43007.txt
+english_tiny_shakespeare|https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
+arabic_luzumiyat_translation|https://www.gutenberg.org/cache/epub/50457/pg50457.txt
+arabic_tales_translation|https://www.gutenberg.org/cache/epub/5245/pg5245.txt
