@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+data/*.txt
+checkpoints/
+tokenizer/tokenizer.json
+tokenizer/metadata.json
+*.pt
+*.pth
+.ipynb_checkpoints/
